@@ -4,29 +4,9 @@ import { profileConfig } from "../../config";
 import { url } from "../../utils/url-utils";
 import ImageWrapper from "../misc/ImageWrapper.astro";
 
-// 导入 Umami 配置工具
-import { getUmamiConfig } from "../../utils/umami-utils";
-
 const config = profileConfig;
-
-// 获取 Umami 配置
-let umamiConfig: Awaited<ReturnType<typeof getUmamiConfig>> = {
-  enable: false,
-  shareUrl: '',
-  htmlScript: ''
-};
-let umamiWebsiteId = "";
-let umamiUrl = "https://eu.umami.is";
-let umamiToken: string | undefined = undefined;
-
-try {
-  umamiConfig = await getUmamiConfig();
-  umamiWebsiteId = umamiConfig.websiteId || "";
-  umamiUrl = umamiConfig.url || "https://eu.umami.is";
-  umamiToken = (umamiConfig as any).token;
-} catch (error) {
-  console.error('Error getting Umami config:', error);
-}
+const umamiShareId = profileConfig.umami?.shareId || "";
+const umamiRegion = profileConfig.umami?.region || "eu";
 ---
 <div class="card-base p-3">
     <a aria-label="Go to About Page" href={url('/about/')}
@@ -56,23 +36,34 @@ try {
                 {config.links[0].name}
             </a>}
         </div>
-        {profileConfig.umami?.enable && umamiConfig.enable && (
+        {config.umami?.enable && (
           <>
             <div class="text-sm text-gray-500 mt-2 text-center">
               <Icon name="fa6-solid:eye" class="inline-block mr-1 text-gray-400 text-sm align-middle" />
               浏览量：<span id="umami-pageviews">-</span>，
               访问次数：<span id="umami-visits">-</span>
             </div>
-            <script is:inline define:vars={{umamiWebsiteId, umamiUrl, umamiToken}}>
+            <script is:inline define:vars={{umamiShareId, umamiRegion}}>
               const fetchUmamiStats = async () => {
                 try {
-                  const websiteId = umamiWebsiteId;
-                  const baseUrl = umamiUrl;
-                  const token = umamiToken;
-                  console.log('Profile websiteId:', websiteId, 'baseUrl:', baseUrl);
+                  const shareId = umamiShareId;
+                  const region = umamiRegion;
+                  console.log('Profile shareId:', shareId, 'region:', region);
                   
-                  // 构造请求 URL
-                  const url = `${baseUrl}/api/websites/${websiteId}/stats?` +
+                  const shareRes = await fetch(`https://${region}.umami.is/api/share/${shareId}`);
+                  console.log('Profile shareRes status:', shareRes.status);
+                  
+                  if (!shareRes.ok) {
+                    throw new Error(`Share API failed: ${shareRes.status}`);
+                  }
+                  
+                  const shareData = await shareRes.json();
+                  console.log('Profile shareData:', shareData);
+                  const token = shareData.token;
+                  const websiteId = shareData.websiteId || shareData.website_id || shareData.id;
+                  console.log('Profile token:', token, 'websiteId:', websiteId);
+                  
+                  const url = `https://${region}.umami.is/api/websites/${websiteId}/stats?` +
                     new URLSearchParams({
                       startAt: '1753333200000',
                       endAt: Date.now(),
@@ -83,18 +74,11 @@ try {
                     });
                   console.log('Profile statsUrl:', url);
                   
-                  // 设置请求头
-                  const headers: Record<string, string> = {
-                    'Content-Type': 'application/json'
-                  };
-                  
-                  // 如果有 token，则添加到请求头
-                  if (token) {
-                    headers['x-umami-share-token'] = token;
-                  }
-                  
                   const res = await fetch(url, {
-                    headers
+                    method: 'GET',
+                    headers: {
+                      'x-umami-share-token': token,
+                    },
                   });
                   console.log('Profile stats res status:', res.status);
                   
@@ -122,3 +106,4 @@ try {
         )}
     </div>
 </div>
+
