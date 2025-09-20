@@ -6,19 +6,16 @@ export interface UmamiConfig {
   enable: boolean;
   shareUrl: string;
   htmlScript: string;
-  url: string;
-  scriptUrl: string;
-  websiteId: string;
+  // 添加提取的配置信息
+  websiteId?: string;
+  url?: string;
 }
 
 // 默认配置
 const defaultUmamiConfig: UmamiConfig = {
   enable: false,
   shareUrl: '',
-  htmlScript: '',
-  url: '',
-  scriptUrl: '',
-  websiteId: ''
+  htmlScript: ''
 };
 
 /**
@@ -93,10 +90,30 @@ function extractConfigFromHtmlScript(htmlScript: string): { url: string; scriptU
 }
 
 /**
+ * 获取分享 token（如果需要）
+ * @param shareUrl 分享 URL
+ * @returns token 字符串或 null
+ */
+async function getShareToken(shareUrl: string): Promise<string | null> {
+  try {
+    if (!shareUrl) return null;
+    
+    const response = await fetch(shareUrl);
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    return data.token || null;
+  } catch (error) {
+    console.error('Error fetching share token:', error);
+    return null;
+  }
+}
+
+/**
  * 读取 Umami 配置
  * @returns Umami 配置对象
  */
-export function getUmamiConfig(): UmamiConfig {
+export async function getUmamiConfig(): Promise<UmamiConfig> {
   try {
     // 获取 config.jsonc 的路径
     const configPath = path.join(process.cwd(), 'src', 'config.jsonc');
@@ -112,7 +129,7 @@ export function getUmamiConfig(): UmamiConfig {
     const config = JSON.parse(configFile);
     
     // 合并默认配置和用户配置
-    const mergedConfig = {
+    const mergedConfig: UmamiConfig = {
       ...defaultUmamiConfig,
       ...config.umami
     };
@@ -121,10 +138,14 @@ export function getUmamiConfig(): UmamiConfig {
     if (mergedConfig.shareUrl) {
       const extractedConfig = extractConfigFromShareUrl(mergedConfig.shareUrl);
       if (extractedConfig) {
-        // 优先使用从 shareUrl 提取的信息，但允许用户配置覆盖
-        mergedConfig.url = mergedConfig.url || extractedConfig.url;
-        mergedConfig.scriptUrl = mergedConfig.scriptUrl || extractedConfig.scriptUrl;
-        mergedConfig.websiteId = mergedConfig.websiteId || extractedConfig.websiteId;
+        mergedConfig.websiteId = extractedConfig.websiteId;
+        mergedConfig.url = extractedConfig.url;
+        
+        // 获取分享 token
+        const token = await getShareToken(mergedConfig.shareUrl);
+        if (token) {
+          (mergedConfig as any).token = token;
+        }
       }
     }
     
@@ -132,10 +153,8 @@ export function getUmamiConfig(): UmamiConfig {
     if (mergedConfig.htmlScript) {
       const extractedConfig = extractConfigFromHtmlScript(mergedConfig.htmlScript);
       if (extractedConfig) {
-        // 优先使用从 htmlScript 提取的信息，但允许用户配置覆盖
-        mergedConfig.url = mergedConfig.url || extractedConfig.url;
-        mergedConfig.scriptUrl = mergedConfig.scriptUrl || extractedConfig.scriptUrl;
-        mergedConfig.websiteId = mergedConfig.websiteId || extractedConfig.websiteId;
+        mergedConfig.websiteId = extractedConfig.websiteId;
+        mergedConfig.url = extractedConfig.url;
       }
     }
     
