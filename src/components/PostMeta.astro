@@ -5,36 +5,8 @@ import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import { formatDateToYYYYMMDD } from "../utils/date-utils";
 import { getCategoryUrl, getTagUrl } from "../utils/url-utils";
-// 引入strip-json-comments包来解析jsonc文件
-import stripJsonComments from "strip-json-comments";
-import fs from "node:fs";
-import path from "node:path";
-
-// 读取并解析config.jsonc文件
-const configPath = path.join(process.cwd(), "src", "config.jsonc");
-const rawConfig = fs.readFileSync(configPath, "utf-8");
-const config = JSON.parse(stripJsonComments(rawConfig));
-
-interface Props {
-	class: string;
-	published: Date;
-	updated?: Date;
-	tags: string[];
-	category: string | null;
-	hideTagsForMobile?: boolean;
-	hideUpdateDate?: boolean;
-}
-const {
-	published,
-	updated,
-	tags,
-	category,
-	hideTagsForMobile = false,
-	hideUpdateDate = false,
-} = Astro.props;
-const className = Astro.props.class;
-const homePaths = ["/", ...Array.from({ length: 20 }, (_, i) => `/${i + 1}/`)];
-const isHome = homePaths.includes(Astro.url.pathname);
+// 使用工具函数加载config.jsonc配置
+import config from "../utils/load-config";
 
 // 从config.jsonc中获取Umami配置
 const umamiConfig = config.Analysis?.umami || {};

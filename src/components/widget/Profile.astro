@@ -3,17 +3,9 @@ import { Icon } from "astro-icon/components";
 import { profileConfig } from "../../config";
 import { url } from "../../utils/url-utils";
 import ImageWrapper from "../misc/ImageWrapper.astro";
-// 引入strip-json-comments包来解析jsonc文件
-import stripJsonComments from "strip-json-comments";
-import fs from "node:fs";
-import path from "node:path";
+// 使用工具函数加载config.jsonc配置
+import config from "../../utils/load-config";
 
-// 读取并解析config.jsonc文件
-const configPath = path.join(process.cwd(), "src", "config.jsonc");
-const rawConfig = fs.readFileSync(configPath, "utf-8");
-const config = JSON.parse(stripJsonComments(rawConfig));
-
-const profileConfig = profileConfig;
 // 从config.jsonc中获取Umami配置
 const umamiConfig = config.Analysis?.umami || {};
 const umamiEnabled = umamiConfig.enabled || false;
