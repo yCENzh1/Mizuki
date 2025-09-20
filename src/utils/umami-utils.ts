@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 
 // 定义 Umami 配置类型
 export interface UmamiConfig {
@@ -115,23 +116,26 @@ async function getShareToken(shareUrl: string): Promise<string | null> {
  */
 export async function getUmamiConfig(): Promise<UmamiConfig> {
   try {
-    // 获取 config.jsonc 的路径
-    const configPath = path.join(process.cwd(), 'src', 'config.jsonc');
+    // 获取 feature.ts 的路径
+    const configPath = path.join(process.cwd(), 'src', 'feature.ts');
     
     // 检查文件是否存在
     if (!fs.existsSync(configPath)) {
-      console.warn('config.jsonc not found, using default Umami config');
+      console.warn('feature.ts not found, using default Umami config');
       return defaultUmamiConfig;
     }
     
-    // 读取并解析配置文件
-    const configFile = fs.readFileSync(configPath, 'utf-8');
-    const config = JSON.parse(configFile);
+    // 使用 pathToFileURL 解决 Windows 上的 ESM 导入问题
+    const configUrl = pathToFileURL(configPath).href;
+    
+    // 动态导入配置文件
+    const configModule = await import(configUrl);
+    const config = configModule.default || configModule;
     
     // 合并默认配置和用户配置
     const mergedConfig: UmamiConfig = {
       ...defaultUmamiConfig,
-      ...config.umami
+      ...(config.umami || {})
     };
     
     // 如果提供了 shareUrl，则从中提取配置信息
