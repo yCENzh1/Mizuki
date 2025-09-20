@@ -11,6 +11,19 @@ const config = loadConfigSync();
 const umamiConfig = config.Analysis?.umami || {};
 const umamiEnabled = umamiConfig.enabled || false;
 const umamiShareURL = umamiConfig.shareURL || ""; // 使用完整的shareURL
+
+// 从shareURL中提取baseUrl和shareId
+let umamiBaseUrl = "";
+let umamiShareId = "";
+if (umamiShareURL) {
+  try {
+    const url = new URL(umamiShareURL);
+    umamiBaseUrl = `${url.protocol}//${url.host}`;
+    umamiShareId = url.pathname.split('/').pop() || "";
+  } catch (e) {
+    console.error("Invalid Umami share URL:", umamiShareURL);
+  }
+}
 ---
 <div class="card-base p-3">
     <a aria-label="Go to About Page" href={url('/about/')}
@@ -41,77 +54,71 @@ const umamiShareURL = umamiConfig.shareURL || ""; // 使用完整的shareURL
             </a>}
         </div>
         {umamiEnabled && (
-          <>
             <div class="text-sm text-gray-500 mt-2 text-center">
-              <Icon name="fa6-solid:eye" class="inline-block mr-1 text-gray-400 text-sm align-middle" />
-              浏览量：<span id="umami-pageviews">-</span>，
-              访问次数：<span id="umami-visits">-</span>
+                <Icon name="fa6-solid:eye" class="inline-block mr-1 text-gray-400 text-sm align-middle" />
+                <span id="site-stats-display">统计加载中...</span>
             </div>
-            <script is:inline define:vars={{umamiShareURL}}>
-              const fetchUmamiStats = async () => {
-                try {
-                  const shareURL = umamiShareURL; // 使用完整的shareURL
-                  console.log('Profile shareURL:', shareURL);
-                  
-                  // 直接使用完整的shareURL，不再拼接
-                  const shareRes = await fetch(shareURL);
-                  console.log('Profile shareRes status:', shareRes.status);
-                  
-                  if (!shareRes.ok) {
-                    throw new Error(`Share API failed: ${shareRes.status}`);
-                  }
-                  
-                  const shareData = await shareRes.json();
-                  console.log('Profile shareData:', shareData);
-                  const token = shareData.token;
-                  const websiteId = shareData.websiteId || shareData.website_id || shareData.id;
-                  console.log('Profile token:', token, 'websiteId:', websiteId);
-                  
-                  // 从shareURL构建stats API URL
-                  // shareURL格式: https://umami.oh1.top/api/share/pNrbzntfHm1jet1f
-                  // stats URL格式: https://umami.oh1.top/api/websites/{websiteId}/stats
-                  const baseUrl = shareURL.substring(0, shareURL.lastIndexOf('/api/share/'));
-                  const statsUrl = `${baseUrl}/api/websites/${websiteId}/stats?` +
-                    new URLSearchParams({
-                      startAt: '1753333200000',
-                      endAt: Date.now(),
-                      unit: 'hour',
-                      timezone: 'Asia/Shanghai',
-                      url: '/',
-                      compare: 'false',
-                    });
-                  console.log('Profile statsUrl:', statsUrl);
-                  
-                  const res = await fetch(statsUrl, {
-                    method: 'GET',
-                    headers: {
-                      'x-umami-share-token': token,
-                    },
-                  });
-                  console.log('Profile stats res status:', res.status);
-                  
-                  const data = await res.json();
-                  console.log('Profile stats data:', data);
-                  
-                  if (res.ok) {
-                    const pageviews = data?.pageviews?.value ?? 'N/A';
-                    const visits = data?.visits?.value ?? 'N/A';
-                    document.getElementById('umami-pageviews').textContent = pageviews;
-                    document.getElementById('umami-visits').textContent = visits;
-                  } else {
-                    document.getElementById('umami-pageviews').textContent = 'N/A';
-                    document.getElementById('umami-visits').textContent = 'N/A';
-                  }
-                } catch (error) {
-                  console.error('Profile Umami stats error:', error);
-                  document.getElementById('umami-pageviews').textContent = 'Error';
-                  document.getElementById('umami-visits').textContent = 'Error';
-                }
-              };
-              fetchUmamiStats();
-            </script>
-          </>
         )}
     </div>
 </div>
 
+{umamiEnabled && (
+    <script define:vars={{ umamiBaseUrl, umamiShareId, umamiConfig }}>
+        // 客户端统计文案生成函数
+        function generateStatsText(pageViews, visits) {
+            return `浏览量 ${pageViews} · 访问次数 ${visits}`;
+        }
+        
+        // 获取访问量统计
+        async function fetchSiteStats(isRetry = false) {
+            if (!umamiConfig.enabled) {
+                return;
+            }
+            
+            try {
+                // 调用全局工具获取 Umami 分享数据
+                const { websiteId, token } = await getUmamiShareData(umamiBaseUrl, umamiShareId);
+                
+                // 第二步：获取统计数据
+                const currentTimestamp = Date.now();
+                const statsUrl = `${umamiBaseUrl}/api/websites/${websiteId}/stats?startAt=0&endAt=${currentTimestamp}&unit=hour&timezone=${encodeURIComponent('Asia/Shanghai')}&url=%2F&compare=false`;
+                
+                const statsResponse = await fetch(statsUrl, {
+                    headers: {
+                        'x-umami-share-token': token
+                    }
+                });
+                
+                if (!statsResponse.ok) {
+                    if (statsResponse.status === 401 && !isRetry) {
+                        clearUmamiShareCache();
+                        return fetchSiteStats(true);
+                    }
+                    throw new Error('获取统计数据失败');
+                }
+                
+                const statsData = await statsResponse.json();
+                const pageViews = statsData.pageviews?.value || 0;
+                const visits = statsData.visits?.value || 0;
+                
+                const displayElement = document.getElementById('site-stats-display');
+                if (displayElement) {
+                    displayElement.textContent = generateStatsText(pageViews, visits);
+                }
+            } catch (error) {
+                console.error('Error fetching site stats:', error);
+                const displayElement = document.getElementById('site-stats-display');
+                if (displayElement) {
+                    displayElement.textContent = '统计不可用';
+                }
+            }
+        }
+
+        // 页面加载完成后获取统计数据
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fetchSiteStats);
+        } else {
+            fetchSiteStats();
+        }
+    </script>
+)}
