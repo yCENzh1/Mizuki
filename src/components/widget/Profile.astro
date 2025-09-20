@@ -3,10 +3,21 @@ import { Icon } from "astro-icon/components";
 import { profileConfig } from "../../config";
 import { url } from "../../utils/url-utils";
 import ImageWrapper from "../misc/ImageWrapper.astro";
+// 引入strip-json-comments包来解析jsonc文件
+import stripJsonComments from "strip-json-comments";
+import fs from "node:fs";
+import path from "node:path";
 
-const config = profileConfig;
-const umamiShareId = profileConfig.umami?.shareId || "";
-const umamiRegion = profileConfig.umami?.region || "eu";
+// 读取并解析config.jsonc文件
+const configPath = path.join(process.cwd(), "src", "config.jsonc");
+const rawConfig = fs.readFileSync(configPath, "utf-8");
+const config = JSON.parse(stripJsonComments(rawConfig));
+
+const profileConfig = profileConfig;
+// 从config.jsonc中获取Umami配置
+const umamiConfig = config.Analysis?.umami || {};
+const umamiEnabled = umamiConfig.enabled || false;
+const umamiShareURL = umamiConfig.shareURL || ""; // 使用完整的shareURL
 ---
 <div class="card-base p-3">
     <a aria-label="Go to About Page" href={url('/about/')}
@@ -18,39 +29,39 @@ const umamiRegion = profileConfig.umami?.region || "eu";
                   class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl">
             </Icon>
         </div>
-        <ImageWrapper src={config.avatar || ""} alt="Profile Image of the Author" class="mx-auto lg:w-full h-full lg:mt-0 "></ImageWrapper>
+        <ImageWrapper src={profileConfig.avatar || ""} alt="Profile Image of the Author" class="mx-auto lg:w-full h-full lg:mt-0 "></ImageWrapper>
     </a>
     <div class="px-2">
-        <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{config.name}</div>
+        <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{profileConfig.name}</div>
         <div class="h-1 w-5 bg-[var(--primary)] mx-auto rounded-full mb-2 transition"></div>
-        <div class="text-center text-neutral-400 mb-2.5 transition">{config.bio}</div>
+        <div class="text-center text-neutral-400 mb-2.5 transition">{profileConfig.bio}</div>
         <div class="flex gap-2 justify-center mb-1">
-            {config.links.length > 1 && config.links.map(item =>
+            {profileConfig.links.length > 1 && profileConfig.links.map(item =>
                     <a rel="me" aria-label={item.name} href={item.url} target="_blank" class="btn-regular rounded-lg h-10 w-10 active:scale-90">
                         <Icon name={item.icon} class="text-[1.5rem]"></Icon>
                     </a>
             )}
-            {config.links.length == 1 && <a rel="me" aria-label={config.links[0].name} href={config.links[0].url} target="_blank"
+            {profileConfig.links.length == 1 && <a rel="me" aria-label={profileConfig.links[0].name} href={profileConfig.links[0].url} target="_blank"
                                             class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                <Icon name={config.links[0].icon} class="text-[1.5rem]"></Icon>
-                {config.links[0].name}
+                <Icon name={profileConfig.links[0].icon} class="text-[1.5rem]"></Icon>
+                {profileConfig.links[0].name}
             </a>}
         </div>
-        {config.umami?.enable && (
+        {umamiEnabled && (
           <>
             <div class="text-sm text-gray-500 mt-2 text-center">
               <Icon name="fa6-solid:eye" class="inline-block mr-1 text-gray-400 text-sm align-middle" />
               浏览量：<span id="umami-pageviews">-</span>，
               访问次数：<span id="umami-visits">-</span>
             </div>
-            <script is:inline define:vars={{umamiShareId, umamiRegion}}>
+            <script is:inline define:vars={{umamiShareURL}}>
               const fetchUmamiStats = async () => {
                 try {
-                  const shareId = umamiShareId;
-                  const region = umamiRegion;
-                  console.log('Profile shareId:', shareId, 'region:', region);
+                  const shareURL = umamiShareURL; // 使用完整的shareURL
+                  console.log('Profile shareURL:', shareURL);
                   
-                  const shareRes = await fetch(`https://${region}.umami.is/api/share/${shareId}`);
+                  // 直接使用完整的shareURL，不再拼接
+                  const shareRes = await fetch(shareURL);
                   console.log('Profile shareRes status:', shareRes.status);
                   
                   if (!shareRes.ok) {
@@ -63,7 +74,11 @@ const umamiRegion = profileConfig.umami?.region || "eu";
                   const websiteId = shareData.websiteId || shareData.website_id || shareData.id;
                   console.log('Profile token:', token, 'websiteId:', websiteId);
                   
-                  const url = `https://${region}.umami.is/api/websites/${websiteId}/stats?` +
+                  // 从shareURL构建stats API URL
+                  // shareURL格式: https://umami.oh1.top/api/share/pNrbzntfHm1jet1f
+                  // stats URL格式: https://umami.oh1.top/api/websites/{websiteId}/stats
+                  const baseUrl = shareURL.substring(0, shareURL.lastIndexOf('/api/share/'));
+                  const statsUrl = `${baseUrl}/api/websites/${websiteId}/stats?` +
                     new URLSearchParams({
                       startAt: '1753333200000',
                       endAt: Date.now(),
@@ -72,9 +87,9 @@ const umamiRegion = profileConfig.umami?.region || "eu";
                       url: '/',
                       compare: 'false',
                     });
-                  console.log('Profile statsUrl:', url);
+                  console.log('Profile statsUrl:', statsUrl);
                   
-                  const res = await fetch(url, {
+                  const res = await fetch(statsUrl, {
                     method: 'GET',
                     headers: {
                       'x-umami-share-token': token,
