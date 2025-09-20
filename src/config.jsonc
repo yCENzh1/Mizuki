@@ -1,0 +1,37 @@
+{
+  // Umami网站统计配置 | Umami Analytics Configuration
+  "umami": {
+    // 是否启用Umami统计功能 | Enable Umami analytics
+    "enable": false,
+    
+    // 分享链接URL，例如：https://eu.umami.is/api/share/2dKQ5T0WrUn6AYtr
+    // 系统会自动从此URL中提取网站ID、基础URL和脚本URL
+    // Share URL, e.g.: https://eu.umami.is/api/share/2dKQ5T0WrUn6AYtr
+    // System will automatically extract website ID, base URL and script URL from this URL
+    "shareUrl": "",
+    
+    // 完整的HTML脚本标签，例如：<script defer src="https://cloud.umami.is/script.js" data-website-id="a1a1f897-326f-4e68-a6f0-54e9dc361522"></script>
+    // 如果提供了此字段，将优先使用此脚本标签直接插入到页面中
+    // Complete HTML script tag, e.g.: <script defer src="https://cloud.umami.is/script.js" data-website-id="a1a1f897-326f-4e68-a6f0-54e9dc361522"></script>
+    // If provided, this script tag will be used directly in the page
+    "htmlScript": "",
+    
+    // Umami服务的基础URL，例如：https://eu.umami.is
+    // 通常会从shareUrl或htmlScript中自动提取
+    // Base URL of Umami service, e.g.: https://eu.umami.is
+    // Usually extracted automatically from shareUrl or htmlScript
+    "url": "",
+    
+    // Umami统计脚本的完整URL，例如：https://eu.umami.is/script.js
+    // 通常会从shareUrl或htmlScript中自动提取
+    // Complete URL of Umami script, e.g.: https://eu.umami.is/script.js
+    // Usually extracted automatically from shareUrl or htmlScript
+    "scriptUrl": "",
+    
+    // 网站ID，用于API调用识别网站
+    // 通常会从shareUrl或htmlScript中自动提取
+    // Website ID for API calls
+    // Usually extracted automatically from shareUrl or htmlScript
+    "websiteId": ""
+  }
+}
