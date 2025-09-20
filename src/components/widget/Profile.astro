@@ -4,9 +4,10 @@ import { profileConfig } from "../../config";
 import { url } from "../../utils/url-utils";
 import ImageWrapper from "../misc/ImageWrapper.astro";
 // 使用工具函数加载config.jsonc配置
-import config from "../../utils/load-config";
+import { loadConfigSync } from "../../utils/load-config";
 
 // 从config.jsonc中获取Umami配置
+const config = loadConfigSync();
 const umamiConfig = config.Analysis?.umami || {};
 const umamiEnabled = umamiConfig.enabled || false;
 const umamiShareURL = umamiConfig.shareURL || ""; // 使用完整的shareURL
