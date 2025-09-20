@@ -2,19 +2,19 @@
   // Umami网站统计配置 | Umami Analytics Configuration
   "umami": {
     // 是否启用Umami统计功能 | Enable Umami analytics
-    "enable": false,
+    "enable": true,
     
     // 分享链接URL，例如：https://eu.umami.is/api/share/2dKQ5T0WrUn6AYtr
     // 系统会自动从此URL中提取网站ID、基础URL和脚本URL
     // Share URL, e.g.: https://eu.umami.is/api/share/2dKQ5T0WrUn6AYtr
     // System will automatically extract website ID, base URL and script URL from this URL
-    "shareUrl": "",
+    "shareUrl": "https://us.umami.is/api/share/pNrbzntfHm1jet1f",
     
     // 完整的HTML脚本标签，例如：<script defer src="https://cloud.umami.is/script.js" data-website-id="a1a1f897-326f-4e68-a6f0-54e9dc361522"></script>
     // 如果提供了此字段，将优先使用此脚本标签直接插入到页面中
     // Complete HTML script tag, e.g.: <script defer src="https://cloud.umami.is/script.js" data-website-id="a1a1f897-326f-4e68-a6f0-54e9dc361522"></script>
     // If provided, this script tag will be used directly in the page
-    "htmlScript": "",
+    "htmlScript": "<script defer src="https://cloud.umami.is/script.js" data-website-id="606672ff-6f67-4dc0-8006-bfc094539ecb"></script>",
     
     // Umami服务的基础URL，例如：https://eu.umami.is
     // 通常会从shareUrl或htmlScript中自动提取
