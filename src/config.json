@@ -5,33 +5,5 @@
       "shareURL": "https://us.umami.is/api/share/pNrbzntfHm1jet1f",
       "scripts": "<script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"606672ff-6f67-4dc0-8006-bfc094539ecb\"></script>"
     }
-  },
-  "fonts": {
-    "enable": false,
-    "global": {
-      "fontFamily": "ZenMaruGothic-Medium",
-      "fallback": ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", "Helvetica Neue", "sans-serif"]
-    },
-    "code": {
-      "fontFamily": "JetBrains Mono Variable",
-      "fallback": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
-    },
-    "customFonts": [
-      {
-        "name": "ZenMaruGothic-Medium",
-        "src": "/assets/font/ZenMaruGothic-Medium.ttf",
-        "format": "truetype",
-        "weight": "500",
-        "display": "swap"
-      },
-      {
-        "name": "GenEiGothic",
-        "src": "/assets/font/GenEiGothicP.ttf",
-        "format": "truetype",
-        "weight": "normal",
-        "display": "swap"
-      }
-    ],
-    "customCSS": ""
   }
 }

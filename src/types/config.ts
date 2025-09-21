@@ -21,7 +21,12 @@ export type SiteConfig = {
 		fixed: boolean;
 	};
 
-	// 字体配置现在在 config.json 中管理，详见 FontConfig 类型
+	// 添加字体配置
+	font: {
+		zenMaruGothic: {
+			enable: boolean; // 是否使用 ZenMaruGothic-Black 作为全局字体
+		};
+	};
 
 	translate?: {
 		enable: boolean; // 是否启用翻译功能
