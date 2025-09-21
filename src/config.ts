@@ -486,3 +486,11 @@ export const widgetConfigs = {
 	fullscreenWallpaper: fullscreenWallpaperConfig,
 	pio: pioConfig, // 添加 pio 配置
 } as const;
+
+export const umamiConfig = {
+  enabled: true,
+  shareURL: "https://us.umami.is/api/share/pNrbzntfHm1jet1f",
+  scripts: `
+<script defer src="https://cloud.umami.is/script.js" data-website-id="606672ff-6f67-4dc0-8006-bfc094539ecb"></script>
+  `.trim()
+} as const;
