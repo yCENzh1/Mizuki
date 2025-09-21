@@ -3,28 +3,26 @@ import { Icon } from "astro-icon/components";
 import { profileConfig } from "../../config";
 import { url } from "../../utils/url-utils";
 import ImageWrapper from "../misc/ImageWrapper.astro";
-// 使用工具函数加载config.jsonc配置
-import { loadConfigSync } from "../../utils/load-config";
 
-// 从config.jsonc中获取Umami配置
-const config = loadConfigSync();
-const umamiConfig = config.Analysis?.umami || {};
-const umamiEnabled = umamiConfig.enabled || false;
-const umamiShareURL = umamiConfig.shareURL || ""; // 使用完整的shareURL
+import config from '../../config.js';
 
-// 从shareURL中提取baseUrl和shareId
+// 解析 umami
+const umamiConfig   = config.Analysis?.umami || {};
+const umamiEnabled  = umamiConfig.enabled || false;
+const umamiShareURL = umamiConfig.shareURL || "";
 let umamiBaseUrl = "";
 let umamiShareId = "";
 if (umamiShareURL) {
   try {
-    const url = new URL(umamiShareURL);
-    umamiBaseUrl = `${url.protocol}//${url.host}`;
-    umamiShareId = url.pathname.split('/').pop() || "";
-  } catch (e) {
-    console.error("Invalid Umami share URL:", umamiShareURL);
+    const u = new URL(umamiShareURL);
+    umamiBaseUrl = `${u.protocol}//${u.host}`;
+    umamiShareId = u.pathname.split('/').pop() || "";
+  } catch {
+    console.warn("Invalid Umami shareURL");
   }
 }
 ---
+
 <div class="card-base p-3">
     <a aria-label="Go to About Page" href={url('/about/')}
        class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-3

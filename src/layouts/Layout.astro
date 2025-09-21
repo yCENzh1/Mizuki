@@ -21,8 +21,9 @@ import {
 import { defaultFavicons } from "../constants/icon";
 import type { Favicon, SakuraConfig } from "../types/config";
 import { pathsEqual, url } from "../utils/url-utils";
-// 导入loadConfigSync函数
-import { loadConfigSync } from "../utils/load-config";
+
+import config from './config.js';
+
 import "katex/dist/katex.css";
 import "../styles/mobile-navbar.css";
 import "../styles/wallpaper-navbar-transparent.css";

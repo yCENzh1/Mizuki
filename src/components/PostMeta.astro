@@ -5,30 +5,26 @@ import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import { formatDateToYYYYMMDD } from "../utils/date-utils";
 import { getCategoryUrl, getTagUrl } from "../utils/url-utils";
-// 使用工具函数加载config.json配置
-import { loadConfigSync } from "../utils/load-config";
 
-// 从config.json中获取Umami配置
-const config = loadConfigSync();
-const umamiConfig = config.Analysis?.umami || {};
-const umamiEnabled = umamiConfig.enabled || false;
-const umamiShareURL = umamiConfig.shareURL || ""; // 使用完整的shareURL
+import config from '../../config.js';
 
-// 从shareURL中提取baseUrl和shareId
+// 解析 umami
+const umamiConfig   = config.Analysis?.umami || {};
+const umamiEnabled  = umamiConfig.enabled || false;
+const umamiShareURL = umamiConfig.shareURL || "";
 let umamiBaseUrl = "";
 let umamiShareId = "";
 if (umamiShareURL) {
   try {
-    const url = new URL(umamiShareURL);
-    umamiBaseUrl = `${url.protocol}//${url.host}`;
-    umamiShareId = url.pathname.split('/').pop() || "";
-  } catch (e) {
-    console.error("Invalid Umami share URL:", umamiShareURL);
+    const u = new URL(umamiShareURL);
+    umamiBaseUrl = `${u.protocol}//${u.host}`;
+    umamiShareId = u.pathname.split('/').pop() || "";
+  } catch {
+    console.warn("Invalid Umami shareURL");
   }
 }
 
-// 定义组件Props
-interface Props {
+export interface Props {
   published: Date;
   updated?: Date;
   category?: string;
@@ -37,7 +33,7 @@ interface Props {
   hideTagsForMobile?: boolean;
   isHome?: boolean;
   className?: string;
-  slug?: string; // 添加slug属性用于文章页面
+  slug?: string;
 }
 
 const {
@@ -52,6 +48,7 @@ const {
   slug
 } = Astro.props;
 ---
+
 
 <div class:list={["flex flex-wrap text-neutral-500 dark:text-neutral-400 items-center gap-4 gap-x-4 gap-y-2", className]}>
     <!-- publish date -->
