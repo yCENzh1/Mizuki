@@ -81,6 +81,20 @@
   @apply opacity-100;
 }
 
+/* 移动端始终不显示复制按钮（加密模式） */
+@media (hover: none) {
+  #decrypted-content .copy-btn {
+    display: none !important;
+  }
+}
+
+/* 电脑端始终不显示复制按钮（加密模式） */
+@media (hover: hover) {
+  #decrypted-content .copy-btn {
+    display: none !important;
+  }
+}
+
 /* 代码元素样式 */
 #decrypted-content code {
   font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
@@ -298,5 +312,18 @@
   }
   #decrypted-content .frame.has-language-badge:hover [data-language]::before {
     opacity: 0;
+  }
+}
+
+/* 所有设备始终不显示语言角标（加密模式） */
+@media (hover: none) {
+  #decrypted-content .frame.has-language-badge [data-language]::before {
+    display: none !important;
+  }
+}
+
+@media (hover: hover) {
+  #decrypted-content .frame.has-language-badge [data-language]::before {
+    display: none !important;
   }
 }
